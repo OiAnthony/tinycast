@@ -19,6 +19,11 @@ enum PaletteMode: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    /// A directly summoned history screen returns to the launcher instead of closing the palette.
+    var rootBackMode: Self? {
+        self == .calculatorHistory ? .launcher : nil
+    }
+
     /// One value at a time into the search field, so ↵ still acts with no rows to select.
     var isArgumentForm: Bool { self == .customCommandArguments }
     var systemImage: String {

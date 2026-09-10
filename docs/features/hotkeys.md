@@ -19,11 +19,11 @@ the keycap rendering — only the _engine_ differs.
   registration id, so the two cannot drift.
 - **A command's shortcut and its launcher row run the same funnel.** `HotKeyAction.command(CommandID)`
   is parameterised over the whole catalog and dispatches through `LauncherCoordinator.runCommand`, so a
-  new built-in command arrives bindable with no hotkey plumbing of its own, and there is one behaviour
-  per command rather than one per invocation route.
-- **A command that opens a palette mode toggles it.** Every one of them enters through
-  `PaletteCoordinator.togglePalette(mode:)`, so a second press closes what the first opened. From a
-  launcher row the palette is in `.launcher`, so the row always re-points instead.
+  new built-in command arrives bindable with no hotkey plumbing of its own. The source changes only
+  how a palette screen is placed in navigation; the command action and capability gates stay shared.
+- **A command's palette shortcut is a direct summon, not a navigation push.** A global shortcut
+  opens its feature screen over the launcher as a single return step; switching repeatedly between
+  feature shortcuts never grows an Escape stack. A second press of the same shortcut closes it.
 - **`HotKeyBinding` is the one thing an action is bound to, and it has two cases with two engines.** A
   `.combo` is a Carbon registration; a `.doubleTap` is recognized by `DoubleTapMonitor`, because Carbon
   cannot see a lone modifier at all. Its `Codable` is the synthesised one.

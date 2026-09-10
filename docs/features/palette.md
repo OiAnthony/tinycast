@@ -95,12 +95,13 @@ Uninstall only from a launcher app's Actions menu, scoped to that app. Chat is s
 
 ### Navigation
 
-**The summon decides where a screen sits, not the mode.** `PaletteCoordinator.navigate(to:)` is the
-one rule: a palette already on screen is being *navigated*, so the current screen is pushed and
-becomes the step back; a hidden one is being *summoned*, so the new screen is a root with nothing
-behind it. Every mode command and every global hotkey funnels through `showPalette`, which calls it —
-so typing "Clipboard History" at the root and pressing ↵ leaves a step back to the search that found
-it, while the Clipboard History hotkey does not. Nothing per-feature encodes this.
+**The summon decides where a screen sits, not the mode.** `PaletteCoordinator.navigate(to:)` is used
+for navigation from inside the palette: a visible palette pushes the current screen and a hidden one
+starts a new root. A global shortcut instead uses `summonFromShortcut(mode:)`: Launcher is the root,
+and a feature shortcut creates at most one Launcher → feature return step. Repeated feature shortcuts
+replace that step rather than growing it. Thus typing "Clipboard History" at the root and pressing ↵
+leaves a step back to the search that found it, while the Clipboard History hotkey returns to Launcher
+and then hides on the next Escape. Nothing per-feature encodes this.
 
 `PaletteState` holds the screens below `mode` as `[PaletteFrame]` — mode, query and selection, enough
 that returning looks like never having left — and offers four motions over it:
@@ -128,9 +129,11 @@ Search says. Clearing the query is still the first press either way.
 
 The header draws a back chevron on **every** screen but the launcher: leaving is what the icon
 slot means once you are off the root, and a slot that changed shape with provenance would read
-as two different controls. Where the click lands still depends on the stack — a pushed screen
-pops, a root one closes — so `backHelp` says which, rather than promising a step that is really
-a close. It lights to `textPrimary` under the pointer over `Theme.Duration.hover`, and
+as two different controls. A direct Calculator History root is the exception: its destination is
+the launcher, so the chevron and its Escape hint say "go back" even though its stack is empty.
+Where the click lands still depends on the stack — a pushed screen pops, a normal root one closes —
+so `backHelp` says which, rather than promising a step that is really a close. It lights to
+`textPrimary` under `Theme.Duration.hover`, and
 `HeaderBackButton` keeps that hover state to itself so the header around it never re-renders.
 
 The launcher advertises the first hop in the header — `AI Chat` beside a `⇥` cap, the footer's own

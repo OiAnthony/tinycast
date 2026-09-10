@@ -67,11 +67,11 @@ final class ExtensionCoordinator {
     }
 
     /// Resolved from the installed set: the launcher may never have been opened.
-    func runExtensionCommand(entryID: String) {
+    func runExtensionCommand(entryID: String, fromGlobalShortcut: Bool = false) {
         guard settings.extensionsEnabled,
             let entry = extensions.launcherEntry(forEntryID: entryID)
         else { return }
-        runExtensionCommand(entry)
+        runExtensionCommand(entry, fromGlobalShortcut: fromGlobalShortcut)
     }
 
     // MARK: - Managing one extension from the launcher
@@ -141,19 +141,22 @@ final class ExtensionCoordinator {
     }
 
     /// A view command takes over the palette; a no-view command closes it and runs headless.
-    func runExtensionCommand(_ app: AppEntry, arguments: [String: String] = [:]) {
+    func runExtensionCommand(
+        _ app: AppEntry, arguments: [String: String] = [:], fromGlobalShortcut: Bool = false
+    ) {
         guard let (owner, command) = extensions.resolve(app) else { return }
         switch command.mode {
         case .view:
-            // Switch the palette over first, so the launching state is what the user sees.
-            paletteCoordinator.navigate(to: .extensionCommand)
-            // A shortcut fires while hidden, where a view command has nowhere to render.
-            if !paletteCoordinator.isVisible {
-                paletteCoordinator.showPalette(mode: .extensionCommand)
+            if fromGlobalShortcut {
+                guard paletteCoordinator.summonFromShortcut(mode: .extensionCommand) else { return }
+            } else {
+                paletteCoordinator.navigate(to: .extensionCommand)
+                if !paletteCoordinator.isVisible {
+                    paletteCoordinator.showPalette(mode: .extensionCommand)
+                }
             }
             Task { await extensions.run(owner, command: command, arguments: arguments) }
         case .noView, .menuBar:
-            // A no-view command's own HUD is the feedback, so the palette gets out of the way.
             paletteCoordinator.hidePalette(restoreFocus: false)
             Task { await extensions.run(owner, command: command, arguments: arguments) }
         }

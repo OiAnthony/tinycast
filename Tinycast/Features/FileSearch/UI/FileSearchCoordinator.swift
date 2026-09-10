@@ -34,9 +34,14 @@ final class FileSearchCoordinator {
     }
 
     /// `query` is the fallback row's: the screen opens already narrowed to what was typed.
-    func show(query: String = "") {
+    func show(query: String = "", fromGlobalShortcut: Bool = false) {
         guard settings.fileSearchEnabled else { return }
-        paletteCoordinator.togglePalette(mode: .fileSearch, seeding: query.isEmpty ? nil : query)
+        if fromGlobalShortcut {
+            paletteCoordinator.summonFromShortcut(
+                mode: .fileSearch, seeding: query.isEmpty ? nil : query)
+        } else {
+            paletteCoordinator.togglePalette(mode: .fileSearch, seeding: query.isEmpty ? nil : query)
+        }
     }
 
     func open(_ result: FileSearchResult) {

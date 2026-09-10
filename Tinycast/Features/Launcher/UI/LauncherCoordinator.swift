@@ -1,5 +1,10 @@
 import AppKit
 
+enum LauncherCommandSource {
+    case launcher
+    case globalShortcut
+}
+
 /// Owns launcher activation: the one funnel from a palette row to whatever the entry's kind runs.
 @MainActor
 final class LauncherCoordinator {
@@ -132,10 +137,10 @@ final class LauncherCoordinator {
     }
 
     /// The one funnel a built-in command runs through, from a palette row or its global shortcut.
-    func runCommand(_ id: CommandID) {
+    func runCommand(_ id: CommandID, source: LauncherCommandSource = .launcher) {
         switch id {
         case .aiChat:
-            core.aiChatCoordinator.showChat()
+            core.aiChatCoordinator.showChat(fromGlobalShortcut: source == .globalShortcut)
         case .fixGrammar:
             core.quickActionCoordinator.run(.fixGrammar)
         case .rewrite:
@@ -145,24 +150,24 @@ final class LauncherCoordinator {
         case .summarize:
             core.quickActionCoordinator.run(.summarize)
         case .calculatorHistory:
-            paletteCoordinator.togglePalette(mode: .calculatorHistory)
+            openPalette(.calculatorHistory, source: source)
         case .clipboardHistory:
-            paletteCoordinator.togglePalette(mode: .clipboard)
+            openPalette(.clipboard, source: source)
         case .searchEmoji:
-            paletteCoordinator.togglePalette(mode: .emoji)
+            openPalette(.emoji, source: source)
         case .searchFiles:
-            fileSearchCoordinator.show()
+            core.fileSearchCoordinator.show(fromGlobalShortcut: source == .globalShortcut)
         case .openCamera:
             dismissPalette()
             Task { await core.cameraCoordinator.show() }
         case .openInBrowser, .runShellCommand:
-            break  // Query-driven: each runs where the typed text is, never through this funnel.
+            break
         case .joinNextMeeting:
             calendarCoordinator.joinNextMeeting()
         case .copyMeetingLink:
             calendarCoordinator.copyNextMeetingLink()
         case .mySchedule:
-            calendarCoordinator.showSchedule()
+            calendarCoordinator.showSchedule(fromGlobalShortcut: source == .globalShortcut)
         case .openInCalendar:
             calendarCoordinator.openNextMeetingInCalendar()
         case .createEvent:
@@ -177,9 +182,9 @@ final class LauncherCoordinator {
             dismissPalette()
             notesCoordinator.searchNotes()
         case .searchQuicklinks:
-            paletteCoordinator.togglePalette(mode: .quicklinks)
+            openPalette(.quicklinks, source: source)
         case .searchSnippets:
-            snippetCoordinator.showSnippets()
+            snippetCoordinator.showSnippets(fromGlobalShortcut: source == .globalShortcut)
         case .createSnippet:
             dismissPalette()
             snippetCoordinator.editSnippet(nil)
@@ -221,6 +226,14 @@ final class LauncherCoordinator {
             core.supportCoordinator.showSupport()
         case .quit:
             NSApp.terminate(nil)
+        }
+    }
+
+    private func openPalette(_ mode: PaletteMode, source: LauncherCommandSource) {
+        if source == .globalShortcut {
+            paletteCoordinator.summonFromShortcut(mode: mode)
+        } else {
+            paletteCoordinator.togglePalette(mode: mode)
         }
     }
 

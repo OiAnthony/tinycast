@@ -67,8 +67,10 @@ final class PaletteWindowController: NSObject, NSWindowDelegate {
             // Events go stale while the palette is closed, and the countdown only ticks while up.
             core.calendarCoordinator.paletteDidShow()
             core.palette.noteVisible(true)
-            // Only while we are on screen: a system-wide tap has no business outliving the window.
-            commandEscapeTap.enable()
+            // Permission prompts belong to the gesture that requests the capability, not summon.
+            if Permissions.isAccessibilityTrusted() {
+                commandEscapeTap.enable()
+            }
             // Non-activating, so summoning never raises our own aux windows behind it.
             panel.makeKeyAndOrderFront(nil)
             panel.orderFrontRegardless()

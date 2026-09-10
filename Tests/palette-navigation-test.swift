@@ -28,6 +28,15 @@ struct PaletteNavigationTests {
     static func main() {
         let vm = searchingLauncher()
         expect(!vm.canGoBack, "a prepared screen is a root with nothing behind it")
+        let calculatorHistory = PaletteState()
+        calculatorHistory.prepare(mode: .calculatorHistory)
+        expect(
+            !calculatorHistory.canGoBack && calculatorHistory.mode.rootBackMode == .launcher,
+            "direct calculator history has an explicit launcher root destination")
+        calculatorHistory.prepare(mode: calculatorHistory.mode.rootBackMode!)
+        expect(
+            calculatorHistory.mode == .launcher && !calculatorHistory.canGoBack,
+            "returning from direct calculator history prepares the launcher root")
 
         vm.push(mode: .clipboard)
         expect(
@@ -78,6 +87,18 @@ struct PaletteNavigationTests {
         summoned.push(mode: .clipboard)
         summoned.prepare(mode: .emoji)
         expect(!summoned.canGoBack, "a summon is a new root, not a step onto the old stack")
+
+        let shortcut = PaletteState()
+        shortcut.summonFromShortcut(mode: .launcher)
+        shortcut.summonFromShortcut(mode: .clipboard)
+        shortcut.summonFromShortcut(mode: .launcher)
+        shortcut.summonFromShortcut(mode: .clipboard)
+        expect(
+            shortcut.mode == .clipboard && shortcut.canGoBack,
+            "feature shortcuts keep one launcher return step")
+        expect(
+            shortcut.pop() && shortcut.mode == .launcher && !shortcut.canGoBack,
+            "repeated feature shortcuts return to launcher exactly once")
 
         let ringed = searchingLauncher()
         ringed.push(mode: .clipboard)

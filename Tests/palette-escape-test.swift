@@ -90,6 +90,10 @@ struct PaletteEscapeTests {
             .hidePalette,
             "chat summoned by its own hotkey hides rather than falling back to the launcher")
         expect(
+            resolve(mode: .calculatorHistory),
+            .goToRoot,
+            "calculator history summoned from outside the palette returns to the launcher")
+        expect(
             resolve(query: "notes", mode: .clipboard, canGoBack: true),
             .clearQuery,
             "a typed query still clears before the back step it would otherwise skip")

@@ -318,8 +318,12 @@ final class CalendarCoordinator {
         MeetingLauncher.showInCalendar(meeting)
     }
 
-    func showSchedule() {
-        paletteCoordinator.togglePalette(mode: .schedule)
+    func showSchedule(fromGlobalShortcut: Bool = false) {
+        if fromGlobalShortcut {
+            paletteCoordinator.summonFromShortcut(mode: .schedule)
+        } else {
+            paletteCoordinator.togglePalette(mode: .schedule)
+        }
     }
 
     /// A miss is transient, so it reports through the HUD rather than a dialog needing dismissal.

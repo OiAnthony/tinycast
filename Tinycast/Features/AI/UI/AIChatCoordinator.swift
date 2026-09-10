@@ -52,15 +52,19 @@ final class AIChatCoordinator {
         core.chatHistory.prune(before: cutoff)
     }
 
-    func showChat() {
+    func showChat(fromGlobalShortcut: Bool = false) {
         guard settings.aiEnabled else { return }
-        // Not `togglePalette`: the open policy decides a chat only on the way in.
+        // Not a toggle when the same screen is already up: a repeated shortcut closes it.
         guard !paletteCoordinator.isShowing(.ai) else {
             paletteCoordinator.hidePalette()
             return
         }
         applyOpenPolicy()
-        paletteCoordinator.showPalette(mode: .ai)
+        if fromGlobalShortcut {
+            paletteCoordinator.summonFromShortcut(mode: .ai)
+        } else {
+            paletteCoordinator.showPalette(mode: .ai)
+        }
     }
 
     /// ⇥ and the AI fallback: a fresh chat that carries the question, already asked.

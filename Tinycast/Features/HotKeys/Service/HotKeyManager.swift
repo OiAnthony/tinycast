@@ -5,7 +5,7 @@ import Foundation
 @Observable
 final class HotKeyManager {
     var onTogglePalette: (() -> Void)?
-    /// The launcher's own command funnel, so a shortcut and a palette row run the same thing.
+    /// The launcher's command funnel; the source distinguishes a shortcut from a launcher row.
     var onRunCommand: ((CommandID) -> Void)?
     var onRunCustomCommand: ((UUID) -> Void)?
     var onRunSystemAction: ((SystemAction.ID) -> Void)?

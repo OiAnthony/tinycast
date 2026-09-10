@@ -242,9 +242,11 @@ final class AppCore {
             snippetListener.healthTicker = healthTicker
 
             hotKeys.onTogglePalette = { [weak self] in self?.paletteCoordinator.togglePalette() }
-            hotKeys.onRunCommand = { [weak self] id in self?.launcherCoordinator.runCommand(id) }
+            hotKeys.onRunCommand = { [weak self] id in
+                self?.launcherCoordinator.runCommand(id, source: .globalShortcut)
+            }
             hotKeys.onRunCustomCommand = { [weak self] id in
-                self?.customCommandCoordinator.runCustomCommand(id: id)
+                self?.customCommandCoordinator.runCustomCommand(id: id, fromGlobalShortcut: true)
             }
             hotKeys.onRunSystemAction = { [weak self] id in
                 self?.systemActionCoordinator.runSystemAction(id: id)
@@ -256,10 +258,11 @@ final class AppCore {
                 self?.windowLayoutCoordinator.runWindowLayout(id: id)
             }
             hotKeys.onOpenQuicklink = { [weak self] id in
-                self?.quicklinkCoordinator.openQuicklink(id: id)
+                self?.quicklinkCoordinator.openQuicklink(id: id, fromGlobalShortcut: true)
             }
             hotKeys.onRunExtensionCommand = { [weak self] entryID in
-                self?.extensionCoordinator.runExtensionCommand(entryID: entryID)
+                self?.extensionCoordinator.runExtensionCommand(
+                    entryID: entryID, fromGlobalShortcut: true)
             }
             extensions.onDidUninstall = { [weak self] entryIDs in
                 self?.extensionCoordinator.removeExtensionReferences(entryIDs: entryIDs)

@@ -42,7 +42,7 @@ final class PaletteCoordinator {
         if isShowing(.launcher) {
             hidePalette()
         } else {
-            showPalette(mode: .launcher, restoreAnyMode: true)
+            summonFromShortcut(mode: .launcher)
         }
     }
 
@@ -64,17 +64,37 @@ final class PaletteCoordinator {
         }
     }
 
+    /// A global shortcut jumps from the launcher into one feature screen, never a deep history stack.
+    @discardableResult
+    func summonFromShortcut(mode: PaletteMode, seeding query: String? = nil) -> Bool {
+        if isShowing(mode), query == nil {
+            hidePalette()
+            return false
+        }
+        _ = windowController.consumePreservedState()
+        palette.summonFromShortcut(mode: mode)
+        if let query { palette.query = query }
+        if !windowController.isVisible { windowController.show() }
+        if palette.mode == .fileSearch { fileSearch.search(palette.query) }
+        if palette.mode == .launcher { Task { await appIndex.refresh() } }
+        return true
+    }
+
     /// Shows the palette, honoring Pop to Root Search. See docs/features/palette.md#state-flow.
     func showPalette(
         mode: PaletteMode, restoreAnyMode: Bool = false, seeding query: String? = nil
     ) {
+        let wasVisible = windowController.isVisible
         let preserved = windowController.consumePreservedState()
         // A carried query always opens the screen fresh: restoring the previous one would drop it.
         if query != nil || !(preserved && (restoreAnyMode || palette.mode == mode)) {
             navigate(to: mode)
         }
         if let query { palette.query = query }
-        windowController.show()
+        // Navigation keeps the existing panel in place; only a hidden palette is summoned.
+        if !wasVisible {
+            windowController.show()
+        }
         if palette.mode == .fileSearch { fileSearch.search(palette.query) }
         // Re-scan on open so an app uninstalled since the last scan drops out of the launcher.
         if palette.mode == .launcher { Task { await appIndex.refresh() } }

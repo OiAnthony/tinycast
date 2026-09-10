@@ -105,6 +105,12 @@ final class PaletteState {
         backStack.removeAll()
     }
 
+    /// A global shortcut has one stable home, regardless of how many feature shortcuts precede it.
+    func summonFromShortcut(mode: PaletteMode) {
+        prepare(mode: .launcher)
+        if mode != .launcher { push(mode: mode) }
+    }
+
     private func openScreen(_ mode: PaletteMode) {
         self.mode = mode
         query = ""

@@ -70,7 +70,8 @@ final class QuicklinkCoordinator {
     /// The one funnel for every open, so neither the switch nor the missing values can be bypassed.
     /// `values` are the header's argument fields; anything still missing sends the row back to them.
     func openQuicklink(
-        id: UUID, forcingDefaultApp: Bool = false, values: [String: String] = [:]
+        id: UUID, forcingDefaultApp: Bool = false, values: [String: String] = [:],
+        fromGlobalShortcut: Bool = false
     ) {
         guard settings.quicklinksEnabled, let quicklink = store.quicklink(id: id),
             quicklink.isEnabled
@@ -101,7 +102,7 @@ final class QuicklinkCoordinator {
             text: quicklink.link, context: context, userArguments: values, encoding: encoding)
         guard expansion.missingArguments.isEmpty else {
             pendingDefaultAppOverride = forcesDefault ? id : nil
-            promptForArguments(quicklink, values: values)
+            promptForArguments(quicklink, values: values, fromGlobalShortcut: fromGlobalShortcut)
             return
         }
         pendingDefaultAppOverride = nil
@@ -131,10 +132,15 @@ final class QuicklinkCoordinator {
         }
         return arguments
     }
-
     /// Search Quicklinks is the one argument surface, so a shortcut with values missing lands there.
-    private func promptForArguments(_ quicklink: Quicklink, values: [String: String]) {
-        paletteCoordinator.showPalette(mode: .quicklinks)
+    private func promptForArguments(
+        _ quicklink: Quicklink, values: [String: String], fromGlobalShortcut: Bool
+    ) {
+        if fromGlobalShortcut {
+            paletteCoordinator.summonFromShortcut(mode: .quicklinks)
+        } else {
+            paletteCoordinator.showPalette(mode: .quicklinks)
+        }
         // After the show: `prepare` runs inside it and would clear everything set beforehand.
         core.palette.selection = store.enabled.firstIndex(of: quicklink) ?? 0
         for (name, value) in values {
